@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Quán Ăn Vặt - Quản Lý Quán</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#ff7a59">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <style>
 :root{
   --bg:#fff7ed;--card:#ffffff;--ink:#3b2a20;--muted:#806b5d;
@@ -46,6 +51,7 @@ main{max-width:900px;margin:auto;padding:12px 12px 90px}
 </style>
 </head>
 <body>
+<button id="installApp" style="display:none;position:fixed;right:12px;top:12px;z-index:120;border:0;border-radius:999px;padding:10px 13px;background:#fff;color:#a14b31;font-weight:900;box-shadow:0 5px 18px rgba(91,57,34,.18)">📲 Cài game</button>
 <div id="startScreen" style="position:fixed;inset:0;z-index:99;background:linear-gradient(145deg,#fff0d5,#ffd4bd);display:flex;align-items:center;justify-content:center;padding:24px">
   <div style="width:min(420px,100%);background:#fffaf5;border-radius:28px;padding:28px 20px;text-align:center;box-shadow:0 18px 50px rgba(91,57,34,.18)">
     <div style="font-size:64px">🍢</div>
@@ -280,6 +286,13 @@ function endDay(){if(state.customers.length&&!confirm('Vẫn còn khách đang c
 document.getElementById('nextDay').onclick=()=>{state.day++;state.period=0;state.boughtToday=false;state.sold={};foods.forEach(f=>state.sold[f.id]=0);state.todayRevenue=0;state.todayCost=0;state.customers=[];document.getElementById('summaryModal').classList.remove('show');render();save();spawnCustomer()};document.getElementById('closeSummary').onclick=()=>document.getElementById('summaryModal').classList.remove('show');document.getElementById('reviewAll2').onclick=()=>{state.reviewFilter='all';renderReviews()};document.getElementById('reviewUnanswered2').onclick=()=>{state.reviewFilter='unanswered';renderReviews()};
 // Gắn nút bắt đầu TRƯỚC khi render để dù dữ liệu lưu cũ có lỗi, màn hình mở đầu vẫn đóng được.
 document.getElementById('startGame').addEventListener('click',function(){document.getElementById('startScreen').style.display='none';document.body.classList.add('game-started');});
+// PWA: đăng ký Service Worker và hiện nút cài khi trình duyệt cho phép.
+let deferredInstallPrompt=null;
+window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();deferredInstallPrompt=e;const b=document.getElementById('installApp');b.style.display='block';});
+document.getElementById('installApp').addEventListener('click',async function(){if(!deferredInstallPrompt)return;deferredInstallPrompt.prompt();await deferredInstallPrompt.userChoice;deferredInstallPrompt=null;this.style.display='none';});
+window.addEventListener('appinstalled',function(){document.getElementById('installApp').style.display='none';});
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(console.error));}
+
 try{render();spawnCustomer();save();}catch(error){console.error('Game init error:',error);document.getElementById('counterText').textContent='Đã khởi động lại dữ liệu game. Hãy chơi tiếp nhé!';}
 
 </script>
